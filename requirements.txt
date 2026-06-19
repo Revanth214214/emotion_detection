@@ -1,0 +1,49 @@
+# -----------------------------------------------
+# GPU - PyTorch (CUDA 12.1 compatible)
+# -----------------------------------------------
+--extra-index-url https://download.pytorch.org/whl/cu121
+torch==2.2.2
+torchvision==0.17.2
+torchaudio==2.2.2
+
+# -----------------------------------------------
+# Data handling
+# -----------------------------------------------
+numpy
+pandas
+Pillow                  # reading/processing jpeg images
+opencv-python           # face detection, image preprocessing
+
+# -----------------------------------------------
+# ML - training utilities
+# -----------------------------------------------
+scikit-learn            # metrics, confusion matrix, train/test split
+matplotlib              # plotting loss/accuracy curves
+seaborn                 # prettier confusion matrix heatmaps
+tensorboard             # visualise training live in browser
+tqdm                    # progress bars during training epochs
+
+# -----------------------------------------------
+# Model saving / experiment tracking
+# -----------------------------------------------
+mlflow                  # track experiments, log metrics, save models
+
+# -----------------------------------------------
+# Config management (fits your classic ML scaffold)
+# -----------------------------------------------
+PyYAML                  # read your config.yaml and params.yaml
+python-box              # access yaml values as dot notation (config.training.lr)
+ensure                  # type validation on your config values
+
+# -----------------------------------------------
+# App / serving
+# -----------------------------------------------
+flask                   # serve your model via app.py
+
+# -----------------------------------------------
+# Dev / notebook
+# -----------------------------------------------
+jupyter                 # for research/trials.ipynb
+ipykernel
+
+-e .
