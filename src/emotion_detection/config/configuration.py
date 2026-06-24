@@ -2,6 +2,7 @@ from emotion_detection import *
 from emotion_detection.logging import logger
 from emotion_detection.utils.common import read_yaml, create_directories
 from emotion_detection.entity.config_entity import DatainjectionConfig
+from emotion_detection.entity.config_entity import DataValidationConfig
 from emotion_detection.constant import *
 
 class configurationManager:
@@ -28,3 +29,16 @@ class configurationManager:
         )
 
         return data_injection_config
+
+    def get_data_validation_config(self) -> DataValidationConfig:
+        config = self.config.data_validation
+
+        create_directories([config.root_dir])
+
+        data_validation_config = DataValidationConfig(
+            root_dir = config.root_dir,
+            STATUS_FILE = config.STATUS_FILE,
+            ALL_REQUIRED_FILES = config.ALL_REQUIRED_FILES
+        )
+
+        return data_validation_config
