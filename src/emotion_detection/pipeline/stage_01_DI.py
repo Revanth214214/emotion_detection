@@ -1,5 +1,5 @@
 from emotion_detection.config.configuration import configurationManager
-from emotion_detection.components.data_ingestion import DataInjection
+from emotion_detection.components.data_ingestion import DataIngestion
 from emotion_detection.logging import logger
 
 class DataIngestionTrainingPipeline:
@@ -8,7 +8,7 @@ class DataIngestionTrainingPipeline:
 
     def main(self):
         config = configurationManager()
-        data_injection_config = config.get_data_injection_config()
-        data_injection = DataInjection(config=data_injection_config)
-        data_injection.download_files()
-        data_injection.extract_zipfile()
+        data_ingestion_config = config.get_data_ingestion_config()
+        data_ingestion = DataIngestion(config=data_ingestion_config)
+        data_ingestion.download_files()
+        data_ingestion.extract_zipfile()

@@ -3,11 +3,11 @@ import urllib.request as request
 import zipfile
 from emotion_detection.logging import logger
 from emotion_detection.utils.common import *
-from emotion_detection.entity.config_entity import DatainjectionConfig
+from emotion_detection.entity.config_entity import DataIngestionConfig
 from pathlib import Path
 
-class DataInjection:
-    def __init__(self, config: DatainjectionConfig):
+class DataIngestion:
+    def __init__(self, config: DataIngestionConfig):
         self.config = config
 
 

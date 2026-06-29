@@ -1,4 +1,4 @@
-from emotion_detection.components.data_ingestion import DataInjection
+from emotion_detection.components.data_ingestion import DataIngestion
 from emotion_detection.pipeline.stage_01_DI import DataIngestionTrainingPipeline
 from emotion_detection.components.data_validation import Datavalidation
 from emotion_detection.pipeline.stage_02_DV import DataValidationTrainingPipeline

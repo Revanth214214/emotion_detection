@@ -3,7 +3,7 @@ from pathlib import Path
 
 
 @dataclass(frozen = True)
-class DatainjectionConfig:
+class DataIngestionConfig:
     root_dir: Path
     source_URL: str
     local_data_file: Path
