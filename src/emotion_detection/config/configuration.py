@@ -4,6 +4,7 @@ from emotion_detection.utils.common import read_yaml, create_directories
 from emotion_detection.entity.config_entity import DataIngestionConfig
 from emotion_detection.entity.config_entity import DataValidationConfig
 from emotion_detection.entity.config_entity import DataTransformationConfig
+from emotion_detection.entity.config_entity import ModelTrainerConfig
 from emotion_detection.constant import *
 
 class configurationManager:
@@ -55,3 +56,20 @@ class configurationManager:
         )
 
         return data_transformation_config
+    def get_model_trainer_config(self) -> ModelTrainerConfig:
+        config_info = self.config['model_trainer']
+        params_info = self.params['ModelTrainer']
+        
+        return ModelTrainerConfig(
+            root_dir=Path(config_info['root_dir']),
+            train_data_path=Path(config_info['train_data_path']),
+            test_data_path=Path(config_info['test_data_path']),
+            model_name=config_info['model_name'],
+            batch_size=params_info['batch_size'],
+            num_epochs=params_info['num_epochs'],
+            patience=params_info['patience'],
+            seed=params_info['seed'],
+            lr_layer3=params_info['lr_layer3'],
+            lr_layer4=params_info['lr_layer4'],
+            lr_fc=params_info['lr_fc']
+        )

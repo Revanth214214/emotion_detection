@@ -1,15 +1,15 @@
 # -----------------------------------------------
 # GPU - PyTorch (CUDA 12.1 compatible)
 # -----------------------------------------------
---extra-index-url https://download.pytorch.org/whl/cu121
-torch==2.2.2
-torchvision==0.17.2
-torchaudio==2.2.2
+--index-url https://download.pytorch.org/whl/cu128
+torch==2.7.1
+torchvision==0.22.1
+torchaudio==2.7.1
 
 # -----------------------------------------------
 # Data handling
 # -----------------------------------------------
-numpy
+numpy==1.26.4
 pandas
 Pillow                  # reading/processing jpeg images
 opencv-python           # face detection, image preprocessing

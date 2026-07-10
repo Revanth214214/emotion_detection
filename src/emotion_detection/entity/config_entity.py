@@ -19,3 +19,17 @@ class DataValidationConfig:
 class DataTransformationConfig:
     root_dir: Path
     organized_dir: Path
+
+@dataclass(frozen=True)
+class ModelTrainerConfig:
+    root_dir: Path
+    train_data_path: Path
+    test_data_path: Path
+    model_name: str
+    batch_size: int
+    num_epochs: int
+    patience: int
+    seed: int
+    lr_layer3: float
+    lr_layer4: float
+    lr_fc: float
