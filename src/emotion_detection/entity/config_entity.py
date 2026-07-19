@@ -21,16 +21,16 @@ class DataTransformationConfig:
     organized_dir: Path
     transformed_dir: Path
 
-@dataclass(frozen=True)
+@dataclass(frozen = True)
 class ModelTrainerConfig:
     root_dir: Path
     train_data_path: Path
     test_data_path: Path
-    model_name: str
+    model_path: Path
+    val_split_size: float
     batch_size: int
-    num_epochs: int
+    epochs: int
     patience: int
-    seed: int
     lr_layer3: float
     lr_layer4: float
     lr_fc: float

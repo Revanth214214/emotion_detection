@@ -1,9 +1,10 @@
 # params.yaml
-ModelTrainer:
+
+ModelTrainerParams:
+  val_split_size: 0.85
   batch_size: 32
-  num_epochs: 40
+  epochs: 40
   patience: 10
-  seed: 42
   lr_layer3: 0.000001
   lr_layer4: 0.00001
   lr_fc: 0.0001
