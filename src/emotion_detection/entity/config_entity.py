@@ -19,6 +19,7 @@ class DataValidationConfig:
 class DataTransformationConfig:
     root_dir: Path
     organized_dir: Path
+    transformed_dir: Path
 
 @dataclass(frozen=True)
 class ModelTrainerConfig:

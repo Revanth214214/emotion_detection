@@ -6,6 +6,7 @@ from emotion_detection.entity.config_entity import DataValidationConfig
 from emotion_detection.entity.config_entity import DataTransformationConfig
 from emotion_detection.entity.config_entity import ModelTrainerConfig
 from emotion_detection.constant import *
+import os
 
 class configurationManager:
     def __init__(
@@ -44,18 +45,24 @@ class configurationManager:
         )
 
         return data_validation_config
+    
     def get_data_transformation_config(self) -> DataTransformationConfig:
         config = self.config.data_transformation
 
-        # Create the artifacts/data_transformation root directory
+        # Automatically creates the artifacts/data_transformation root directory
         create_directories([config.root_dir])
+
+        # Dynamically building the path: artifacts/data_transformation/Organized
+        transformed_path = Path(os.path.join(config.root_dir, "Organized"))
 
         data_transformation_config = DataTransformationConfig(
             root_dir=Path(config.root_dir),
-            organized_dir=Path(config.organized_dir)
+            organized_dir=Path(config.organized_dir),
+            transformed_dir=transformed_path
         )
 
         return data_transformation_config
+
     def get_model_trainer_config(self) -> ModelTrainerConfig:
         config_info = self.config['model_trainer']
         params_info = self.params['ModelTrainer']
