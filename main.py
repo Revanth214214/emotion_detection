@@ -6,6 +6,8 @@ from emotion_detection.components.data_transformation import DataTransformation
 from emotion_detection.pipeline.stage_03_DT import DataTransformationTrainingPipeline
 from emotion_detection.components.model_trainer import ModelTrainer
 from emotion_detection.pipeline.stage_04_MT import ModelTrainerTrainingPipeline
+from emotion_detection.components.model_evaluation import ModelEvaluation
+from emotion_detection.pipeline.stage_05_ME import ModelEvaluationPipeline
 from emotion_detection.logging import logger
 
 STAGE_NAME = "Data Ingestion Stage"
@@ -43,6 +45,16 @@ try:
     logger.info(f">>>>>> Stage {STAGE_NAME} Started <<<<<<")
     model_trainer = ModelTrainerTrainingPipeline()
     model_trainer.main()
+    logger.info(f">>>>>> Stage {STAGE_NAME} Completed <<<<<<\n\nx==========x")
+except Exception as e:
+    logger.exception(e)
+    raise e
+
+STAGE_NAME = "Model Evaluation Stage"
+try:
+    logger.info(f">>>>>> Stage {STAGE_NAME} Started <<<<<<")
+    model_evaluation = ModelEvaluationPipeline()
+    model_evaluation.main()
     logger.info(f">>>>>> Stage {STAGE_NAME} Completed <<<<<<\n\nx==========x")
 except Exception as e:
     logger.exception(e)

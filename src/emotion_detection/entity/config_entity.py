@@ -34,3 +34,10 @@ class ModelTrainerConfig:
     lr_layer3: float
     lr_layer4: float
     lr_fc: float
+
+@dataclass(frozen= True)
+class ModelEvaluationConfig:
+    root_dir: Path
+    test_data_path: Path
+    model_path: Path
+    metric_file_name: Path

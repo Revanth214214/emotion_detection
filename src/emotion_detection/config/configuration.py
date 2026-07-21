@@ -5,6 +5,7 @@ from emotion_detection.entity.config_entity import DataIngestionConfig
 from emotion_detection.entity.config_entity import DataValidationConfig
 from emotion_detection.entity.config_entity import DataTransformationConfig
 from emotion_detection.entity.config_entity import ModelTrainerConfig
+from emotion_detection.entity.config_entity import ModelEvaluationConfig
 from emotion_detection.constant import *
 import os
 
@@ -84,3 +85,17 @@ class configurationManager:
         )
 
         return model_trainer_config
+
+    def get_model_evaluation_config(self) -> ModelEvaluationConfig:
+        config = self.config.model_evaluation
+
+        create_directories([config.root_dir])
+
+        model_evaluation_config = ModelEvaluationConfig(
+            root_dir=Path(config.root_dir),
+            test_data_path=Path(config.test_data_path),
+            model_path=Path(config.model_path),
+            metric_file_name=Path(config.metric_file_name)
+        )
+
+        return model_evaluation_config
