@@ -59,7 +59,8 @@ class configurationManager:
         data_transformation_config = DataTransformationConfig(
             root_dir=Path(config.root_dir),
             organized_dir=Path(config.organized_dir),
-            transformed_dir=transformed_path
+            transformed_dir=transformed_path,
+            organized_folder=config.organized_folder
         )
 
         return data_transformation_config

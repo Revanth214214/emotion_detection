@@ -20,6 +20,7 @@ class DataTransformationConfig:
     root_dir: Path
     organized_dir: Path
     transformed_dir: Path
+    organized_folder: Path
 
 @dataclass(frozen = True)
 class ModelTrainerConfig:

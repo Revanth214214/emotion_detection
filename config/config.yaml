@@ -16,6 +16,7 @@ data_validation:
 data_transformation:
   root_dir: artifacts/data_transformation
   organized_dir: artifacts/data_ingestion/Organized
+  organized_folder: artifacts/data_transformation/Organized
 
 model_trainer:
   root_dir: artifacts/model_trainer
