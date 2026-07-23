@@ -1,12 +1,7 @@
-from emotion_detection.components.data_ingestion import DataIngestion
 from emotion_detection.pipeline.stage_01_DI import DataIngestionTrainingPipeline
-from emotion_detection.components.data_validation import Datavalidation
 from emotion_detection.pipeline.stage_02_DV import DataValidationTrainingPipeline
-from emotion_detection.components.data_transformation import DataTransformation
 from emotion_detection.pipeline.stage_03_DT import DataTransformationTrainingPipeline
-from emotion_detection.components.model_trainer import ModelTrainer
 from emotion_detection.pipeline.stage_04_MT import ModelTrainerTrainingPipeline
-from emotion_detection.components.model_evaluation import ModelEvaluation
 from emotion_detection.pipeline.stage_05_ME import ModelEvaluationPipeline
 from emotion_detection.logging import logger
 
