@@ -8,6 +8,7 @@ from torch.utils.data import DataLoader, Subset, WeightedRandomSampler
 from collections import Counter
 from emotion_detection.logging import logger
 from emotion_detection.entity.config_entity import ModelTrainerConfig
+from tqdm import tqdm
 
 class ModelTrainer:
     def __init__(self, config: ModelTrainerConfig):
@@ -100,7 +101,10 @@ class ModelTrainer:
             model.train()
             train_loss, train_correct = 0, 0
 
-            for images, labels in train_loader:
+            for images, labels in tqdm(
+                train_loader,
+                desc=f"Epoch {epoch+1}/{self.config.epochs}"
+            ):
                 images, labels = images.to(self.device), labels.to(self.device)
                 optimizer.zero_grad()
                 outputs = model(images)
