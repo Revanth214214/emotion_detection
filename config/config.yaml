@@ -29,3 +29,15 @@ model_evaluation:
   test_data_path: artifacts/data_transformation/Organized/test
   model_path: artifacts/model_trainer/best_rafdb_resnet18.pth
   metric_file_name: artifacts/model_evaluation/metrics.json
+
+model_loader:
+  root_dir: artifacts/model_loader
+  trained_model: https://huggingface.co/San0160/emotion_detector/resolve/main/best_rafdb_resnet18.pth
+  local_model: artifacts/model_loader/best_rafdb_resnet18.pth
+  num_classes: 7
+
+model_processor:
+  root_dir: artifacts/model_processor
+  image_size: [224, 224]
+  mean: [0.485, 0.456, 0.406]
+  std: [0.229, 0.224, 0.225]
