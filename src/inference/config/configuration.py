@@ -1,12 +1,12 @@
 from pathlib import Path
 
-from emotion_detection.constant import *
-from emotion_detection.utils.common import read_yaml, create_directories
+from inference.constant import *
+from inference.utils.common import read_yaml, create_directories
 
-from emotion_detection.entity.config_entity import (ModelLoaderConfig, ModelProcessorConfig)
+from inference.entity.config_entity import (ModelLoaderConfig, ModelProcessorConfig)
 
 
-class configurationManager:
+class ConfigurationManager:
     def __init__(
         self,
         config_filepath = CONFIG_FILE_PATH,     # Access to constants
