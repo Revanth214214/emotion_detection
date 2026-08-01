@@ -3,6 +3,7 @@ from emotion_detection.pipeline.stage_02_DV import DataValidationTrainingPipelin
 from emotion_detection.pipeline.stage_03_DT import DataTransformationTrainingPipeline
 from emotion_detection.pipeline.stage_04_MT import ModelTrainerTrainingPipeline
 from emotion_detection.pipeline.stage_05_ME import ModelEvaluationPipeline
+from inference.pipeline.inference_pipeline import InferencePipeline
 from emotion_detection.logging import logger
 
 STAGE_NAME = "Data Ingestion Stage"
@@ -54,3 +55,11 @@ try:
 except Exception as e:
     logger.exception(e)
     raise e
+
+
+STAGE_NAME = "Inference Stage"
+if __name__ == "__main__":
+    print(f">>>>>> {STAGE_NAME} started <<<<<<")
+    pipeline = InferencePipeline()
+    pipeline.run()
+    print(f">>>>>> {STAGE_NAME} completed <<<<<<")
