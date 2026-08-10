@@ -225,3 +225,6 @@ artifacts/
 *.onnx
 *.bin
 models/
+
+# Ignore local raw and organized datasets
+dataset/

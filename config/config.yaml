@@ -4,7 +4,7 @@ artifacts_root: artifacts
 
 data_ingestion:
   root_dir: artifacts/data_ingestion
-  source_URL: https://huggingface.co/datasets/San0160/RAF-DB/resolve/main/Organized_new.zip  
+  source_URL: https://huggingface.co/datasets/Revanth214/rafdb_clean/resolve/main/rafdb_org_clean.zip
   local_data_file: artifacts/data_ingestion/data.zip
   unzip_dir: artifacts/data_ingestion
 
@@ -22,18 +22,18 @@ model_trainer:
   root_dir: artifacts/model_trainer
   train_data_path: artifacts/data_transformation/Organized/train
   test_data_path: artifacts/data_transformation/Organized/test
-  model_path: artifacts/model_trainer/best_rafdb_resnet18.pth
+  model_path: artifacts/model_trainer/best_rafdb_resnet18_enhanced(in_use)
 
 model_evaluation:
   root_dir: artifacts/model_evaluation
   test_data_path: artifacts/data_transformation/Organized/test
-  model_path: artifacts/model_trainer/best_rafdb_resnet18.pth
+  model_path: artifacts/model_trainer/best_rafdb_resnet18_enhanced(in_use)
   metric_file_name: artifacts/model_evaluation/metrics.json
 
 model_loader:
   root_dir: artifacts/model_loader
-  trained_model: https://huggingface.co/San0160/emotion_detector/resolve/main/best_rafdb_resnet18.pth
-  local_model: artifacts/model_loader/best_rafdb_resnet18.pth
+  trained_model: https://huggingface.co/Revanth214/emotion_detection_enhanced/resolve/main/best_rafdb_resnet18_enhanced(in_use).pth
+  local_model: artifacts/model_loader/best_rafdb_resnet18_enhanced(in_use)
   num_classes: 7
 
 model_processor:
