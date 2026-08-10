@@ -245,3 +245,24 @@ Test accuracy (76.37%) slightly exceeding validation accuracy (74.20%) is a good
 5. **Data quality has a hard ceiling that no amount of architecture tuning can overcome.** Every ResNet18 configuration on FER2013 converged to roughly the same ~60-63% ceiling regardless of which layers were unfrozen — the real fix was switching to a cleaner dataset (RAF-DB), not further model tuning.
 6. **Environment-specific issues are real and not your fault.** Corrupted pretrained-weight downloads, Windows-specific OpenMP kernel crashes, and stale GPU memory from other open notebooks all caused real failures unrelated to the modeling logic itself.
 
+### Model Iteration Roadmap
+
+* **Trial 01: Baseline ResNet-18 (Vanilla Transfer Learning)**
+  Established the initial baseline using a standard pretrained ResNet-18 architecture with default cross-entropy loss and standard augmentation ($224 \times 224$). Achieved a baseline validation accuracy of ~74.3% with significant overfitting (~93.6% training accuracy).
+
+* **Trial 02: ResNet-18 + Class Weighting & Weighted Sampler**
+  Addressed class imbalance across RAF-DB expressions using a `WeightedRandomSampler` and custom loss weighting. Stabilized minority class recall across epochs while maintaining overall validation performance around ~74.5%.
+
+* **Trial 03: ResNet-18 + Deep Data Augmentation & Label Smoothing**
+  Introduced aggressive spatial transforms (Random Rotation, Affine, Color Jitter) alongside Label Smoothing ($0.1$) and Random Erasing. Reduced feature memorization and improved validation performance to ~76.2%.
+
+* **Trial 04: Backbone Scaling to ResNet-50**
+  Scaled the model architecture up to ResNet-50 to evaluate whether deeper feature extraction capability would improve expression classification. Found that added parameter capacity increased overfitting risk without yielding gains over ResNet-18.
+
+* **Trial 05: Selective Unfreezing & Cosine Annealing Scheduler**
+  Returned to ResNet-18, unfreezing `layer2`, `layer3`, and `layer4` alongside a `CosineAnnealingLR` scheduler. Pushed peak validation accuracy to 79.63%, but exhibited a wide ~18% train-val gap (97% train accuracy) as the learning rate decayed near zero.
+
+* **Trial 06: Regularized ResNet-18 + Soft Mixup & Test-Time Augmentation (Final Model)**
+  Integrated soft Mixup augmentation ($\alpha=0.05$), higher weight decay ($1\times 10^{-3}$), and Test-Time Augmentation (horizontal flip averaging) during evaluation. Successfully locked in a **80.61% Validation Accuracy** while capping training accuracy under 90% (~8–9% generalization gap).
+
+  
