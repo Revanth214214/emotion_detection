@@ -1,48 +1,19 @@
-# -----------------------------------------------
-# GPU - PyTorch (CUDA 12.1 compatible)
-# -----------------------------------------------
---index-url https://download.pytorch.org/whl/cu128
-torch==2.7.1
-torchvision==0.22.1
-torchaudio==2.7.1
+--extra-index-url https://download.pytorch.org/whl/cpu
 
-# -----------------------------------------------
-# Data handling
-# -----------------------------------------------
-numpy==1.26.4
+# Core ML & Vision dependencies
+torch
+torchvision
+torchaudio
+opencv-python-headless
+
+# Data processing
+numpy
 pandas
-Pillow                  # reading/processing jpeg images
-opencv-python-headless    # face detection, image preprocessing
-# -----------------------------------------------
-# ML - training utilities
-# -----------------------------------------------
-scikit-learn            # metrics, confusion matrix, train/test split
-matplotlib              # plotting loss/accuracy curves
-seaborn                 # prettier confusion matrix heatmaps
-tensorboard             # visualise training live in browser
-tqdm                    # progress bars during training epochs
 
-# -----------------------------------------------
-# Model saving / experiment tracking
-# -----------------------------------------------
-mlflow                  # track experiments, log metrics, save models
-
-# -----------------------------------------------
-# Config management (fits your classic ML scaffold)
-# -----------------------------------------------
-PyYAML                  # read your config.yaml and params.yaml
-python-box              # access yaml values as dot notation (config.training.lr)
-ensure                  # type validation on your config values
-
-# -----------------------------------------------
-# App / serving
-# -----------------------------------------------
+# API Framework
 fastapi
 uvicorn
 python-multipart
-
-# -----------------------------------------------
-# Dev / notebook
-# -----------------------------------------------
-jupyter                 # for research/trials.ipynb
-ipykernel
+scikit-learn
+pillow
+pyyaml

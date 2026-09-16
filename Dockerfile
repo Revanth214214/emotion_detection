@@ -1,5 +1,5 @@
 # 1. Base Image: Use an official lightweight Python runtime
-FROM python:3.12-slim
+FROM python:3.10-slim
 
 # 2. Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -21,13 +21,19 @@ COPY requirements.txt .
 
 # 6. Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir --extra-index-url https://pypi.org/simple -r requirements.txt
+    pip install --no-cache-dir -r requirements.txt
 
 # 7. Copy the entire project into the container
 COPY . .
 
 # 8. Expose port 8000 for FastAPI
 EXPOSE 8000
+
+# Set Python module path
+ENV PYTHONPATH=/app:/app/src
+
+# Start FastAPI app
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
 
 # 9. Command to run the application
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
