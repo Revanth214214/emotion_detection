@@ -34,6 +34,3 @@ ENV PYTHONPATH=/app:/app/src
 
 # Start FastAPI app
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
-
-# 9. Command to run the application
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
