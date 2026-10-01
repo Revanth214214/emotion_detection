@@ -30,7 +30,7 @@ async def predict(file: UploadFile = File(...)):
             shutil.copyfileobj(file.file, buffer)
 
         # 2. Pass image path directly into your inference pipeline
-        result = pipeline.run_pipeline(temp_file_path) # Or pipeline.predict(temp_file_path) depending on your method name
+        result = pipeline.run(temp_file_path) # Or pipeline.predict(temp_file_path) depending on your method name
 
         # 3. Clean up the temporary file
         os.remove(temp_file_path)
