@@ -37,65 +37,101 @@ class InferencePipeline:
             "haarcascade_frontalface_default.xml"
         )
 
-    def run(self):
+    #def run(self, image_path):
 
-        cap = cv2.VideoCapture(0)
+       # cap = cv2.VideoCapture(0)
 
-        while True:
+      #  while True:
 
-            ret, frame = cap.read()
+       #     ret, frame = cap.read()
 
-            if not ret:
-                break
+        #    if not ret:
+         #       break
 
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+         #   gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-            faces = self.face_detector.detectMultiScale(
-                gray,
-                scaleFactor=1.1,
-                minNeighbors=5,
-                minSize=(50, 50)
-            )
+           # faces = self.face_detector.detectMultiScale(
+              #  gray,
+               # scaleFactor=1.1,
+              #  minNeighbors=5,
+                #minSize=(50, 50)
+            #)
 
-            for (x, y, w, h) in faces:
+            #for (x, y, w, h) in faces:
 
-                face = frame[y:y+h, x:x+w]
+                #face = frame[y:y+h, x:x+w]
 
-                image_tensor = self.processor.process_face(
-                    face,
-                    self.device
-                )
+                #image_tensor = self.processor.process_face(
+               #     face,
+               #     self.device
+               # )
 
-                prediction, confidence, _ = self.predictor.predict(
-                    image_tensor
-                )
+              #  prediction, confidence, _ = self.predictor.predict(
+                #    image_tensor
+                #)
 
-                cv2.rectangle(
-                    frame,
-                    (x, y),
-                    (x+w, y+h),
-                    (0, 255, 0),
-                    2
-                )
+                #cv2.rectangle(
+                #    frame,
+                #    (x, y),
+                 #   (x+w, y+h),
+                 #   (0, 255, 0),
+                 #   2
+               # )
 
-                cv2.putText(
-                    frame,
-                    f"{prediction} ({confidence:.2f})",
-                    (x, y-10),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.7,
-                    (0, 255, 0),
-                    2
-                )
+               # cv2.putText(
+               #     frame,
+               #     f"{prediction} ({confidence:.2f})",
+                #    (x, y-10),
+                #    cv2.FONT_HERSHEY_SIMPLEX,
+               #     0.7,
+               #     (0, 255, 0),
+               #     2
+                #)
 
-            cv2.imshow(
-                "Emotion Detection",
-                frame
-            )
+            #cv2.imshow(
+               # "Emotion Detection",
+               # frame
+            #)
 
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+            #if cv2.waitKey(1) & 0xFF == ord('q'):
+                #break
 
-        cap.release()
+        #cap.release()
 
-        cv2.destroyAllWindows()
+        #cv2.destroyAllWindows()
+
+def run(self, image_path):
+    # Load the image provided by FastAPI
+    frame = cv2.imread(image_path)
+    if frame is None:
+        return {"error": "Failed to load image"}
+
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+    faces = self.face_detector.detectMultiScale(
+        gray,
+        scaleFactor=1.1,
+        minNeighbors=5,
+        minSize=(50, 50)
+    )
+
+    results = []
+    for (x, y, w, h) in faces:
+        face = frame[y:y+h, x:x+w]
+
+        image_tensor = self.processor.process_face(
+            face,
+            self.device
+        )
+
+        prediction, confidence, _ = self.predictor.predict(
+            image_tensor
+        )
+
+        results.append({
+            "emotion": prediction,
+            "confidence": float(confidence),
+            "box": [int(x), int(y), int(w), int(h)]
+        })
+
+    return results
