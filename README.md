@@ -87,3 +87,21 @@ There are a lot of angles which can throw a ray of hope but the combinations to 
 4. Unfreeze Deeper Layers / Fine-tune Backbone:If using a pretrained backbone (e.g., ResNet18/50), ensure the final 1 or 2 convolutional blocks are unfrozen during training with a lower learning rate ($10^{-4}$ or $10^{-5}$) so high-level facial feature representations adapt to real-world domain nuances.
 
 5. Post-Processing Confidence Thresholding:Since the model has a high prior bias toward happy, set a higher confidence threshold (e.g., >60–70%) before accepting happy as the prediction; otherwise, fall back to evaluating secondary class probabilities (like neutral or sad).
+
+# Real-Time Emotion Detection API
+
+[![Render Deployment](https://img.shields.io/badge/Render-Live_Demo-success?style=for-the-badge&logo=render)](https://emotion-detection-app-ys1j.onrender.com/)
+[![Docker](https://img.shields.io/badge/Docker-Containerized-blue?style=for-the-badge&logo=docker)](https://www.docker.com/)
+
+An end-to-end computer vision and deep learning application that performs real-time emotion detection via webcam streaming. Built with PyTorch, OpenCV, FastAPI, and Docker.
+
+---
+
+## 🚀 Live Demo
+
+You can try out the live web application here:
+👉 **[Live Webcam App on Render](https://emotion-detection-app-ys1j.onrender.com/)**
+
+> **Note:** Since this is hosted on Render's free tier, the container may take ~30 seconds to wake up on the initial load if it has been idle.
+
+---
