@@ -10,7 +10,6 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 # 4. Install system dependencies required by OpenCV and facial detection
-# 4. Install system dependencies required by OpenCV and facial detection
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 \
     libglib2.0-0 \
@@ -23,7 +22,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# 7. Copy the entire project into the container
+# 7. Copy the entire project (including src/static/index.html) into the container
 COPY . .
 
 # 8. Expose port 8000 for FastAPI

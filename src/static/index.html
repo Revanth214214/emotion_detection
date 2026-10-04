@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Emotion Detection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        h1 { margin-bottom: 20px; }
+        .container {
+            position: relative;
+            width: 640px;
+            height: 480px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        video, canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 640px;
+            height: 480px;
+        }
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: white;
+            transition: background 0.2s;
+        }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #555; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <h1>Real-Time Emotion Detection</h1>
+
+    <div class="container">
+        <video id="webcam" autoplay playsinline muted></video>
+        <canvas id="overlay"></canvas>
+    </div>
+
+    <div class="controls">
+        <button id="startBtn">Start Camera</button>
+        <button id="stopBtn" disabled>Stop Camera</button>
+    </div>
+
+    <script>
+        const video = document.getElementById('webcam');
+        const canvas = document.getElementById('overlay');
+        const ctx = canvas.getContext('2d');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+
+        let stream = null;
+        let isRunning = false;
+
+        startBtn.addEventListener('click', async () => {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+                video.srcObject = stream;
+                
+                video.onloadedmetadata = () => {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    isRunning = true;
+                    startBtn.disabled = true;
+                    stopBtn.disabled = false;
+                    processFrame();
+                };
+            } catch (err) {
+                alert("Error accessing webcam: " + err.message);
+            }
+        });
+
+        stopBtn.addEventListener('click', () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            isRunning = false;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+        });
+
+        async function processFrame() {
+            if (!isRunning) return;
+
+            // Draw current video frame to an offscreen canvas to convert to Blob
+            const offscreenCanvas = document.createElement('canvas');
+            offscreenCanvas.width = video.videoWidth;
+            offscreenCanvas.height = video.videoHeight;
+            const offCtx = offscreenCanvas.getContext('2d');
+            offCtx.drawImage(video, 0, 0);
+
+            offscreenCanvas.toBlob(async (blob) => {
+                if (!blob || !isRunning) return;
+
+                const formData = new FormData();
+                formData.append('file', blob, 'frame.jpg');
+
+                try {
+                    const response = await fetch('/predict', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        drawPredictions(data.prediction);
+                    }
+                } catch (err) {
+                    console.error("Inference request failed:", err);
+                }
+
+                // Schedule next frame capture (~10 FPS for smooth inference)
+                if (isRunning) {
+                    setTimeout(processFrame, 100);
+                }
+            }, 'image/jpeg', 0.8);
+        }
+
+        function drawPredictions(predictions) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (!predictions || !Array.isArray(predictions)) return;
+
+            predictions.forEach(pred => {
+                const [x, y, w, h] = pred.box;
+                const label = `${pred.emotion} (${(pred.confidence * 100).toFixed(1)}%)`;
+
+                // Draw bounding box
+                ctx.strokeStyle = '#00FF00';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(x, y, w, h);
+
+                // Draw background box for label text
+                ctx.fillStyle = '#00FF00';
+                ctx.font = '18px Arial';
+                const textWidth = ctx.measureText(label).width;
+                ctx.fillRect(x, y > 25 ? y - 25 : y, textWidth + 10, 25);
+
+                // Draw text
+                ctx.fillStyle = '#000000';
+                ctx.fillText(label, x + 5, y > 25 ? y - 7 : y + 18);
+            });
+        }
+    </script>
+</body>
+</html>
