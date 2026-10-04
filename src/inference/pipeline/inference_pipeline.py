@@ -100,38 +100,38 @@ class InferencePipeline:
 
         #cv2.destroyAllWindows()
 
-def run(self, image_path):
-    # Load the image provided by FastAPI
-    frame = cv2.imread(image_path)
-    if frame is None:
-        return {"error": "Failed to load image"}
+    def run(self, image_path):
+        # Load the image provided by FastAPI
+        frame = cv2.imread(image_path)
+        if frame is None:
+            return {"error": "Failed to load image"}
 
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-    faces = self.face_detector.detectMultiScale(
-        gray,
-        scaleFactor=1.1,
-        minNeighbors=5,
-        minSize=(50, 50)
-    )
-
-    results = []
-    for (x, y, w, h) in faces:
-        face = frame[y:y+h, x:x+w]
-
-        image_tensor = self.processor.process_face(
-            face,
-            self.device
+        faces = self.face_detector.detectMultiScale(
+            gray,
+            scaleFactor=1.1,
+            minNeighbors=5,
+            minSize=(50, 50)
         )
 
-        prediction, confidence, _ = self.predictor.predict(
-            image_tensor
-        )
+        results = []
+        for (x, y, w, h) in faces:
+            face = frame[y:y+h, x:x+w]
 
-        results.append({
-            "emotion": prediction,
-            "confidence": float(confidence),
-            "box": [int(x), int(y), int(w), int(h)]
-        })
+            image_tensor = self.processor.process_face(
+                face,
+                self.device
+            )
 
-    return results
+            prediction, confidence, _ = self.predictor.predict(
+                image_tensor
+            )
+
+            results.append({
+                "emotion": prediction,
+                "confidence": float(confidence),
+                "box": [int(x), int(y), int(w), int(h)]
+            })
+
+        return results
