@@ -3,167 +3,350 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Emotion Detection</title>
+    <title>Emotion AI Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #121212;
-            color: #ffffff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .glass-panel {
+            background: rgba(24, 24, 27, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
-        h1 { margin-bottom: 20px; }
-        .container {
-            position: relative;
-            width: 640px;
-            height: 480px;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-        video, canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 640px;
-            height: 480px;
-        }
-        .controls {
-            margin-top: 20px;
-            display: flex;
-            gap: 15px;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            border: none;
-            border-radius: 4px;
-            background-color: #007bff;
-            color: white;
-            transition: background 0.2s;
-        }
-        button:hover { background-color: #0056b3; }
-        button:disabled { background-color: #555; cursor: not-allowed; }
     </style>
 </head>
-<body>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
 
-    <h1>Real-Time Emotion Detection</h1>
+    <!-- Header -->
+    <header class="border-b border-zinc-800/80 bg-zinc-900/50 backdrop-blur px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="p-2 bg-indigo-600/20 text-indigo-400 rounded-lg border border-indigo-500/30">
+                <i data-lucide="scan-face" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg leading-none text-zinc-100">Emotion AI Studio</h1>
+                <p class="text-xs text-zinc-400 mt-1">Real-Time Computer Vision Dashboard</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-4 text-xs font-medium">
+            <div id="statusBadge" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700">
+                <span class="w-2 h-2 rounded-full bg-zinc-500" id="statusDot"></span>
+                <span id="statusText">System Ready</span>
+            </div>
+        </div>
+    </header>
 
-    <div class="container">
-        <video id="webcam" autoplay playsinline muted></video>
-        <canvas id="overlay"></canvas>
-    </div>
+    <!-- Main Workspace -->
+    <main class="max-w-7xl mx-auto w-full p-4 md:p-8 grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1">
+        
+        <!-- Video Stream Box (Takes 2 Columns) -->
+        <div class="lg:col-span-2 flex flex-col gap-4">
+            <div class="relative w-full aspect-[4/3] bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl flex items-center justify-center">
+                
+                <!-- Video & Canvas Overlays -->
+                <video id="webcam" class="absolute inset-0 w-full h-full object-cover hidden" autoplay playsinline muted></video>
+                <canvas id="overlay" class="absolute inset-0 w-full h-full object-cover z-10"></canvas>
 
-    <div class="controls">
-        <button id="startBtn">Start Camera</button>
-        <button id="stopBtn" disabled>Stop Camera</button>
-    </div>
+                <!-- Idle Camera Placeholder -->
+                <div id="placeholder" class="flex flex-col items-center gap-3 text-zinc-500">
+                    <div class="p-4 rounded-full bg-zinc-800/50 border border-zinc-700/50">
+                        <i data-lucide="camera-off" class="w-8 h-8"></i>
+                    </div>
+                    <p class="text-sm font-medium">Camera is offline</p>
+                    <span class="text-xs text-zinc-600">Click "Start Stream" below to initialize video feed</span>
+                </div>
 
+                <!-- Overlay Stats (Top-Right of Video) -->
+                <div class="absolute top-4 right-4 z-20 flex gap-2 text-xs font-mono">
+                    <div class="px-2.5 py-1 rounded-md glass-panel text-zinc-300 flex items-center gap-1.5">
+                        <i data-lucide="activity" class="w-3.5 h-3.5 text-indigo-400"></i>
+                        <span>FPS: <strong id="fpsCounter" class="text-white">0</strong></span>
+                    </div>
+                    <div class="px-2.5 py-1 rounded-md glass-panel text-zinc-300 flex items-center gap-1.5">
+                        <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-400"></i>
+                        <span>Latency: <strong id="latencyCounter" class="text-white">0 ms</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Control Actions -->
+            <div class="glass-panel rounded-xl p-4 flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <button id="startBtn" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm rounded-lg transition-all flex items-center gap-2 shadow-lg shadow-indigo-600/20 active:scale-95">
+                        <i data-lucide="play" class="w-4 h-4"></i> Start Stream
+                    </button>
+                    <button id="stopBtn" disabled class="px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-200 font-medium text-sm rounded-lg transition-all flex items-center gap-2 border border-zinc-700 active:scale-95">
+                        <i data-lucide="square" class="w-4 h-4"></i> Stop
+                    </button>
+                </div>
+
+                <button id="snapshotBtn" disabled class="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-300 text-sm font-medium rounded-lg transition-all flex items-center gap-2 border border-zinc-700">
+                    <i data-lucide="camera" class="w-4 h-4"></i> Save Snapshot
+                </button>
+            </div>
+        </div>
+
+        <!-- Sidebar Analytics Box -->
+        <div class="flex flex-col gap-6">
+            
+            <!-- Real-time Predictions Panel -->
+            <div class="glass-panel rounded-2xl p-6 flex flex-col gap-4 border border-zinc-800">
+                <div class="flex items-center justify-between border-b border-zinc-800/80 pb-3">
+                    <h2 class="font-semibold text-sm text-zinc-200 flex items-center gap-2">
+                        <i data-lucide="brain-circuit" class="w-4 h-4 text-indigo-400"></i> Active Detection
+                    </h2>
+                    <span id="detectedCount" class="text-xs px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-mono">0 Faces</span>
+                </div>
+
+                <!-- Prediction Cards List -->
+                <div id="predictionsList" class="flex flex-col gap-3 min-h-[160px] justify-center">
+                    <p class="text-xs text-zinc-500 text-center py-8">No faces detected in current frame</p>
+                </div>
+            </div>
+
+            <!-- Infrastructure Specs Card -->
+            <div class="glass-panel rounded-2xl p-5 flex flex-col gap-3 text-xs border border-zinc-800">
+                <h3 class="font-medium text-zinc-400 flex items-center gap-2">
+                    <i data-lucide="server" class="w-4 h-4 text-zinc-400"></i> Deployment Environment
+                </h3>
+                <div class="space-y-2 pt-1 font-mono text-zinc-300">
+                    <div class="flex justify-between py-1 border-b border-zinc-800/50">
+                        <span class="text-zinc-500">Backend API</span>
+                        <span>FastAPI (Uvicorn)</span>
+                    </div>
+                    <div class="flex justify-between py-1 border-b border-zinc-800/50">
+                        <span class="text-zinc-500">Inference Engine</span>
+                        <span>PyTorch / OpenCV</span>
+                    </div>
+                    <div class="flex justify-between py-1">
+                        <span class="text-zinc-500">Container Platform</span>
+                        <span>Docker @ Render</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-zinc-800/80 py-4 px-6 text-center text-xs text-zinc-500">
+        Emotion Detection Web Application &copy; 2026 • Live Production Stream
+    </footer>
+
+    <!-- Frontend Script -->
     <script>
+        // Initialize Icons
+        lucide.createIcons();
+
         const video = document.getElementById('webcam');
         const canvas = document.getElementById('overlay');
         const ctx = canvas.getContext('2d');
         const startBtn = document.getElementById('startBtn');
         const stopBtn = document.getElementById('stopBtn');
+        const snapshotBtn = document.getElementById('snapshotBtn');
+        const placeholder = document.getElementById('placeholder');
+        
+        const fpsCounter = document.getElementById('fpsCounter');
+        const latencyCounter = document.getElementById('latencyCounter');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const predictionsList = document.getElementById('predictionsList');
+        const detectedCount = document.getElementById('detectedCount');
 
         let stream = null;
         let isRunning = false;
+        let lastFrameTime = performance.now();
+        let frameCount = 0;
 
+        // Start Stream Listener
         startBtn.addEventListener('click', async () => {
             try {
                 stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
                 video.srcObject = stream;
                 
                 video.onloadedmetadata = () => {
+                    video.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
                     canvas.width = video.videoWidth;
                     canvas.height = video.videoHeight;
+                    
                     isRunning = true;
                     startBtn.disabled = true;
                     stopBtn.disabled = false;
+                    snapshotBtn.disabled = false;
+                    
+                    updateStatus('online');
                     processFrame();
                 };
             } catch (err) {
-                alert("Error accessing webcam: " + err.message);
+                alert("Webcam permission denied or device not found: " + err.message);
             }
         });
 
+        // Stop Stream Listener
         stopBtn.addEventListener('click', () => {
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-            }
+            if (stream) stream.getTracks().forEach(track => track.stop());
             isRunning = false;
+            
+            video.classList.add('hidden');
+            placeholder.classList.remove('hidden');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
             startBtn.disabled = false;
             stopBtn.disabled = true;
+            snapshotBtn.disabled = true;
+            
+            fpsCounter.innerText = "0";
+            latencyCounter.innerText = "0 ms";
+            detectedCount.innerText = "0 Faces";
+            predictionsList.innerHTML = '<p class="text-xs text-zinc-500 text-center py-8">Stream stopped</p>';
+            
+            updateStatus('offline');
         });
 
+        // Save Snapshot Listener
+        snapshotBtn.addEventListener('click', () => {
+            const combinedCanvas = document.createElement('canvas');
+            combinedCanvas.width = canvas.width;
+            combinedCanvas.height = canvas.height;
+            const cCtx = combinedCanvas.getContext('2d');
+            
+            // Draw video frame + overlay box together
+            cCtx.drawImage(video, 0, 0);
+            cCtx.drawImage(canvas, 0, 0);
+
+            const link = document.createElement('a');
+            link.download = `emotion-snapshot-${Date.now()}.png`;
+            link.href = combinedCanvas.toDataURL('image/png');
+            link.click();
+        });
+
+        // Frame Loop Processing
         async function processFrame() {
             if (!isRunning) return;
 
-            // Draw current video frame to an offscreen canvas to convert to Blob
-            const offscreenCanvas = document.createElement('canvas');
-            offscreenCanvas.width = video.videoWidth;
-            offscreenCanvas.height = video.videoHeight;
-            const offCtx = offscreenCanvas.getContext('2d');
+            const startTime = performance.now();
+
+            const offCanvas = document.createElement('canvas');
+            offCanvas.width = video.videoWidth;
+            offCanvas.height = video.videoHeight;
+            const offCtx = offCanvas.getContext('2d');
             offCtx.drawImage(video, 0, 0);
 
-            offscreenCanvas.toBlob(async (blob) => {
+            offCanvas.toBlob(async (blob) => {
                 if (!blob || !isRunning) return;
 
                 const formData = new FormData();
                 formData.append('file', blob, 'frame.jpg');
 
                 try {
-                    const response = await fetch('/predict', {
-                        method: 'POST',
-                        body: formData
-                    });
+                    const response = await fetch('/predict', { method: 'POST', body: formData });
+                    const latency = Math.round(performance.now() - startTime);
+                    latencyCounter.innerText = `${latency} ms`;
 
                     if (response.ok) {
                         const data = await response.json();
-                        drawPredictions(data.prediction);
+                        drawBoundingBoxes(data.prediction);
+                        updateSidebar(data.prediction);
                     }
                 } catch (err) {
-                    console.error("Inference request failed:", err);
+                    console.error("Prediction error:", err);
                 }
 
-                // Schedule next frame capture (~10 FPS for smooth inference)
-                if (isRunning) {
-                    setTimeout(processFrame, 100);
+                // FPS Calc
+                frameCount++;
+                const now = performance.now();
+                if (now - lastFrameTime >= 1000) {
+                    fpsCounter.innerText = frameCount;
+                    frameCount = 0;
+                    lastFrameTime = now;
                 }
-            }, 'image/jpeg', 0.8);
+
+                if (isRunning) setTimeout(processFrame, 80);
+            }, 'image/jpeg', 0.85);
         }
 
-        function drawPredictions(predictions) {
+        // Draw Styled Target Bounding Boxes
+        function drawBoundingBoxes(predictions) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
             if (!predictions || !Array.isArray(predictions)) return;
 
             predictions.forEach(pred => {
                 const [x, y, w, h] = pred.box;
-                const label = `${pred.emotion} (${(pred.confidence * 100).toFixed(1)}%)`;
+                const label = `${pred.emotion} (${(pred.confidence * 100).toFixed(0)}%)`;
 
-                // Draw bounding box
-                ctx.strokeStyle = '#00FF00';
-                ctx.lineWidth = 3;
+                // Outer Glass Box
+                ctx.strokeStyle = '#6366f1'; // Indigo-500
+                ctx.lineWidth = 2;
                 ctx.strokeRect(x, y, w, h);
 
-                // Draw background box for label text
-                ctx.fillStyle = '#00FF00';
-                ctx.font = '18px Arial';
-                const textWidth = ctx.measureText(label).width;
-                ctx.fillRect(x, y > 25 ? y - 25 : y, textWidth + 10, 25);
+                // Corner Target Brackets
+                const bracketLen = 12;
+                ctx.strokeStyle = '#818cf8';
+                ctx.lineWidth = 4;
 
-                // Draw text
-                ctx.fillStyle = '#000000';
-                ctx.fillText(label, x + 5, y > 25 ? y - 7 : y + 18);
+                // Top-Left
+                ctx.beginPath(); ctx.moveTo(x, y + bracketLen); ctx.lineTo(x, y); ctx.lineTo(x + bracketLen, y); ctx.stroke();
+                // Bottom-Right
+                ctx.beginPath(); ctx.moveTo(x + w, y + h - bracketLen); ctx.lineTo(x + w, y + h); ctx.lineTo(x + w - bracketLen, y + h); ctx.stroke();
+
+                // Label Tag
+                ctx.fillStyle = '#6366f1';
+                ctx.font = '600 13px Inter, sans-serif';
+                const textWidth = ctx.measureText(label).width;
+                
+                ctx.fillRect(x, y > 26 ? y - 26 : y, textWidth + 14, 24);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText(label, x + 7, y > 26 ? y - 9 : y + 16);
             });
+        }
+
+        // Update Sidebar Analytics Cards
+        function updateSidebar(predictions) {
+            if (!predictions || predictions.length === 0) {
+                detectedCount.innerText = "0 Faces";
+                predictionsList.innerHTML = '<p class="text-xs text-zinc-500 text-center py-8">No faces detected</p>';
+                return;
+            }
+
+            detectedCount.innerText = `${predictions.length} ${predictions.length === 1 ? 'Face' : 'Faces'}`;
+            predictionsList.innerHTML = '';
+
+            predictions.forEach(pred => {
+                const confPercent = Math.round(pred.confidence * 100);
+                const card = document.createElement('div');
+                card.className = 'p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 flex flex-col gap-2';
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between text-xs font-semibold text-zinc-200">
+                        <span class="capitalize flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+                            ${pred.emotion}
+                        </span>
+                        <span class="font-mono text-indigo-400">${confPercent}%</span>
+                    </div>
+                    <div class="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+                        <div class="bg-indigo-500 h-full rounded-full transition-all duration-300" style="width: ${confPercent}%"></div>
+                    </div>
+                `;
+                predictionsList.appendChild(card);
+            });
+        }
+
+        function updateStatus(state) {
+            if (state === 'online') {
+                statusDot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+                statusText.innerText = "Live Streaming";
+                statusText.className = "text-emerald-400";
+            } else {
+                statusDot.className = "w-2 h-2 rounded-full bg-zinc-500";
+                statusText.innerText = "System Idle";
+                statusText.className = "text-zinc-400";
+            }
         }
     </script>
 </body>
