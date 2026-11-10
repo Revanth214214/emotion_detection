@@ -1,32 +1,46 @@
+import logging
 import os
-import shutil
-from fastapi import FastAPI, File, UploadFile, HTTPException
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+import time
+
+import cv2
+import numpy as np
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+
 from src.inference.pipeline.inference_pipeline import InferencePipeline
+
+logger = logging.getLogger("emotion_api")
+
+# --- Settings (override with environment variables) -------------------------
+MAX_UPLOAD_BYTES = int(float(os.getenv("MAX_UPLOAD_MB", "5")) * 1024 * 1024)
+MIN_CONFIDENCE = float(os.getenv("MIN_CONFIDENCE", "0.5"))
+ALLOWED_ORIGINS = [
+    o.strip() for o in os.getenv("ALLOWED_ORIGINS", "*").split(",") if o.strip()
+]
+ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp"}
+API_VERSION = "1.1.0"
 
 app = FastAPI(
     title="Emotion Detection API",
     description="API for classifying emotions using PyTorch model",
-    version="1.0.0"
+    version=API_VERSION,
 )
 
-# Enable CORS for frontend requests
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_origins=ALLOWED_ORIGINS,
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 
 # Initialize the pipeline once at app startup
 pipeline = InferencePipeline()
 
-# Mount static files directory for CSS/JS/images assets
 if os.path.exists("src/static"):
     app.mount("/static", StaticFiles(directory="src/static"), name="static")
+
 
 @app.get("/")
 def serve_frontend():
@@ -36,36 +50,55 @@ def serve_frontend():
         return FileResponse(index_path)
     return {"message": "Frontend index.html not found in src/static/", "status": "healthy"}
 
+
 @app.get("/health")
 def health_check():
     """Health check endpoint to verify container status."""
-    return {"status": "healthy", "device": str(pipeline.device)}
+    return {
+        "status": "healthy",
+        "device": str(pipeline.device),
+        "version": API_VERSION,
+        "min_confidence": MIN_CONFIDENCE,
+    }
+
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
-    """Accepts an image upload and returns emotion prediction."""
-    if not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="Uploaded file must be an image.")
+    """Accepts an image upload and returns the emotion for each detected face.
 
-    # 1. Save uploaded bytes to a temporary local file
-    temp_file_path = f"temp_{file.filename}"
+    status is "success" when at least one face was found, "no_face" otherwise.
+    Predictions below MIN_CONFIDENCE are labelled "Uncertain".
+    """
+    if file.content_type not in ALLOWED_TYPES:
+        raise HTTPException(status_code=415, detail="Upload a JPEG, PNG or WebP image.")
+
+    # Read at most limit+1 bytes so oversized uploads are rejected cheaply.
+    data = await file.read(MAX_UPLOAD_BYTES + 1)
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail=f"Image too large (max {MAX_UPLOAD_BYTES // (1024 * 1024)} MB).",
+        )
+
+    # Decode in memory: no temp files, safe for concurrent requests.
+    frame = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
+    if frame is None:
+        raise HTTPException(status_code=400, detail="Could not decode image.")
+
     try:
-        with open(temp_file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        start = time.perf_counter()
+        results = pipeline.run_frame(frame, min_confidence=MIN_CONFIDENCE)
+        inference_ms = round((time.perf_counter() - start) * 1000, 1)
+    except Exception:
+        logger.exception("Inference failed")
+        raise HTTPException(status_code=500, detail="Inference failed.")
 
-        # 2. Pass image path directly into your inference pipeline
-        result = pipeline.run(temp_file_path)
-
-        # 3. Clean up the temporary file
-        os.remove(temp_file_path)
-
-        return {"status": "success", "prediction": result}
-
-    except Exception as e:
-        # Clean up file if inference fails
-        if os.path.exists(temp_file_path):
-            os.remove(temp_file_path)
-        raise HTTPException(status_code=500, detail=f"Inference failed: {str(e)}")
+    return {
+        "status": "success" if results else "no_face",
+        "num_faces": len(results),
+        "inference_ms": inference_ms,
+        "prediction": results,
+    }
 
 
 if __name__ == "__main__":
