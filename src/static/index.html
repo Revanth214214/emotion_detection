@@ -84,9 +84,14 @@
                     </button>
                 </div>
 
-                <button id="snapshotBtn" disabled class="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-300 text-sm font-medium rounded-lg transition-all flex items-center gap-2 border border-zinc-700">
-                    <i data-lucide="camera" class="w-4 h-4"></i> Save Snapshot
-                </button>
+                <div class="flex items-center gap-3">
+                    <button id="exportBtn" disabled class="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-300 text-sm font-medium rounded-lg transition-all flex items-center gap-2 border border-zinc-700">
+                        <i data-lucide="download" class="w-4 h-4"></i> Export CSV
+                    </button>
+                    <button id="snapshotBtn" disabled class="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-300 text-sm font-medium rounded-lg transition-all flex items-center gap-2 border border-zinc-700">
+                        <i data-lucide="camera" class="w-4 h-4"></i> Save Snapshot
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -106,6 +111,25 @@
                 <div id="predictionsList" class="flex flex-col gap-3 min-h-[160px] justify-center">
                     <p class="text-xs text-zinc-500 text-center py-8">No faces detected in current frame</p>
                 </div>
+            </div>
+
+            <!-- Session Summary Panel -->
+            <div class="glass-panel rounded-2xl p-6 flex flex-col gap-4 border border-zinc-800">
+                <div class="flex items-center justify-between border-b border-zinc-800/80 pb-3">
+                    <h2 class="font-semibold text-sm text-zinc-200 flex items-center gap-2">
+                        <i data-lucide="bar-chart-3" class="w-4 h-4 text-indigo-400"></i> Session Summary
+                    </h2>
+                    <button id="clearBtn" class="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">Clear</button>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-center font-mono text-xs">
+                    <div><div class="text-zinc-500">Duration</div><strong id="sumDuration" class="text-white">0:00</strong></div>
+                    <div><div class="text-zinc-500">Samples</div><strong id="sumSamples" class="text-white">0</strong></div>
+                    <div><div class="text-zinc-500">Uncertain</div><strong id="sumUncertain" class="text-white">0%</strong></div>
+                </div>
+                <div id="sumBars" class="flex flex-col gap-2 min-h-[60px]">
+                    <p class="text-xs text-zinc-500 text-center py-4">Start the stream to collect a session</p>
+                </div>
+                <p class="text-[11px] text-zinc-600 leading-snug">Session data stays in this browser tab and is never stored on the server. Emotion estimates are approximate and can be wrong; do not use them for decisions about people.</p>
             </div>
 
             <!-- Infrastructure Specs Card -->
@@ -156,6 +180,8 @@
         const statusText = document.getElementById('statusText');
         const predictionsList = document.getElementById('predictionsList');
         const detectedCount = document.getElementById('detectedCount');
+        const exportBtn = document.getElementById('exportBtn');
+        const clearBtn = document.getElementById('clearBtn');
 
         let stream = null;
         let isRunning = false;
@@ -252,6 +278,7 @@
                         const data = await response.json();
                         drawBoundingBoxes(data.prediction);
                         updateSidebar(data.prediction);
+                        recordSample(data.prediction);
                     }
                 } catch (err) {
                     console.error("Prediction error:", err);
@@ -336,6 +363,101 @@
                 predictionsList.appendChild(card);
             });
         }
+
+
+        // ---- Session log, summary and CSV export (client-side only) ----
+        const SAMPLE_INTERVAL_MS = 1000;   // log at most one sample per second
+        const MAX_ROWS = 20000;            // cap memory use on very long sessions
+        let sessionLog = [];               // {time, face, emotion, top_emotion, confidence}
+        let sessionStart = null;
+        let lastSampleAt = 0;
+
+        function recordSample(predictions) {
+            const now = Date.now();
+            if (now - lastSampleAt < SAMPLE_INTERVAL_MS) return;
+            lastSampleAt = now;
+            if (!sessionStart) sessionStart = now;
+
+            if (!predictions || predictions.length === 0) {
+                sessionLog.push({ time: now, face: 0, emotion: 'No face', top_emotion: '', confidence: '' });
+            } else {
+                predictions.forEach((p, i) => sessionLog.push({
+                    time: now, face: i + 1, emotion: p.emotion,
+                    top_emotion: p.top_emotion || p.emotion, confidence: p.confidence
+                }));
+            }
+            if (sessionLog.length > MAX_ROWS) sessionLog.splice(0, sessionLog.length - MAX_ROWS);
+            exportBtn.disabled = false;
+            renderSummary();
+        }
+
+        function renderSummary() {
+            const faceRows = sessionLog.filter(r => r.face > 0);
+            const counts = {};
+            faceRows.forEach(r => counts[r.emotion] = (counts[r.emotion] || 0) + 1);
+
+            const secs = sessionStart ? Math.floor((Date.now() - sessionStart) / 1000) : 0;
+            document.getElementById('sumDuration').textContent =
+                `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
+            document.getElementById('sumSamples').textContent = faceRows.length;
+            document.getElementById('sumUncertain').textContent =
+                faceRows.length ? Math.round(100 * (counts['Uncertain'] || 0) / faceRows.length) + '%' : '0%';
+
+            const bars = document.getElementById('sumBars');
+            const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+            if (entries.length === 0) {
+                bars.innerHTML = '<p class="text-xs text-zinc-500 text-center py-4">No faces recorded yet</p>';
+                return;
+            }
+            bars.innerHTML = '';
+            entries.forEach(([name, n]) => {
+                const pct = Math.round(100 * n / faceRows.length);
+                const row = document.createElement('div');
+                row.className = 'flex flex-col gap-1';
+                const head = document.createElement('div');
+                head.className = 'flex justify-between text-xs text-zinc-300';
+                const label = document.createElement('span');
+                label.textContent = name;
+                const val = document.createElement('span');
+                val.className = 'font-mono text-zinc-400';
+                val.textContent = pct + '%';
+                head.append(label, val);
+                const track = document.createElement('div');
+                track.className = 'w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden';
+                const fill = document.createElement('div');
+                fill.className = 'bg-indigo-500 h-full rounded-full';
+                fill.style.width = pct + '%';
+                track.appendChild(fill);
+                row.append(head, track);
+                bars.appendChild(row);
+            });
+        }
+
+        exportBtn.addEventListener('click', () => {
+            const header = 'timestamp,seconds_from_start,face,emotion,top_emotion,confidence';
+            const lines = sessionLog.map(r => [
+                new Date(r.time).toISOString(),
+                ((r.time - sessionStart) / 1000).toFixed(1),
+                r.face, r.emotion, r.top_emotion,
+                r.confidence === '' ? '' : Number(r.confidence).toFixed(4)
+            ].join(','));
+            const blob = new Blob([header + '\n' + lines.join('\n') + '\n'], { type: 'text/csv' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `emotion-session-${Date.now()}.csv`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+        });
+
+        clearBtn.addEventListener('click', () => {
+            sessionLog = [];
+            sessionStart = null;
+            lastSampleAt = 0;
+            exportBtn.disabled = true;
+            renderSummary();
+        });
+
+        setInterval(() => { if (isRunning && sessionStart) renderSummary(); }, 1000);
 
         function updateStatus(state) {
             if (state === 'online') {
